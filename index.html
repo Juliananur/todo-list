@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kegiatanku</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 60vw;
+            max-width: 600px;
+            min-width: 300px;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        h2 { color: #e91e63; }
+        input, .deadline {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e91e63;
+            border-radius: 10px;
+            outline: none;
+            margin-top: 10px;
+            font-size: 1rem;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            background: #f96496;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #d81b60;
+        }
+        .task-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .sort-icon {
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        li {
+            background: #f8bbd0;
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .pagination {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .done {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        .edit-input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .overdue {
+            background: #ff5252 !important;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Catatan Kegiatan Harian</h2>
+        <input type="text" id="taskInput" placeholder="Tambah tugas...">
+        <input type="datetime-local" id="taskDeadline" class="deadline">
+        <div class="task-controls">
+            <button onclick="addTask()">Tambah</button>
+            <span class="sort-icon" onclick="toggleSort()">⬆️⬇️</span>
+        </div>
+        <ul id="taskList"></ul>
+        <div class="pagination">
+            <button onclick="prevPage()">⬅️</button>
+            <span id="pageIndicator">1</span>
+            <button onclick="nextPage()">➡️</button>
+        </div>
+    </div>
+    <script>
+        let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        let currentPage = 1;
+        const itemsPerPage = 5;
+        let ascending = true;
+        
+        function addTask() {
+            let taskInput = document.getElementById("taskInput");
+            let deadlineInput = document.getElementById("taskDeadline");
+            let taskText = taskInput.value.trim();
+            let taskDeadline = deadlineInput.value;
+            if (taskText === "" || taskDeadline === "") return;
+            tasks.push({ text: taskText, deadline: taskDeadline, done: false });
+            tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+            taskInput.value = "";
+            deadlineInput.value = "";
+            loadTasks();
+        }
+        
+        function loadTasks() {
+            let taskList = document.getElementById("taskList");
+            taskList.innerHTML = "";
+            let start = (currentPage - 1) * itemsPerPage;
+            let end = start + itemsPerPage;
+            let paginatedTasks = tasks.slice(start, end);
+            let now = new Date();
+            
+            paginatedTasks.forEach((task, index) => {
+                let li = document.createElement("li");
+                li.classList.toggle("done", task.done);
+                if (!task.done && new Date(task.deadline) < now) {
+                    li.classList.add("overdue");
+                }
+                li.innerHTML = `<input type="text" class="edit-input" value="${task.text}" oninput="updateTask(${start + index}, this.value, 'text')">
+                                <input type="datetime-local" class="edit-input" value="${task.deadline}" oninput="updateTask(${start + index}, this.value, 'deadline')">
+                                <div class="buttons">
+                                    <button onclick="toggleDone(${start + index})">✅</button>
+                                    <button onclick="deleteTask(${start + index})">❌</button>
+                                </div>`;
+                taskList.appendChild(li);
+            });
+            document.getElementById("pageIndicator").textContent = currentPage;
+        }
+        
+        function updateTask(index, value, field) {
+            tasks[index][field] = value;
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+            loadTasks();
+        }
+        
+        function toggleSort() {
+            ascending = !ascending;
+            tasks.sort((a, b) => ascending ? new Date(a.deadline) - new Date(b.deadline) : new Date(b.deadline) - new Date(a.deadline));
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+            loadTasks();
+        }
+        
+        function toggleDone(index) {
+            tasks[index].done = !tasks[index].done;
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+            loadTasks();
+        }
+        
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+            loadTasks();
+        }
+        
+        function nextPage() {
+            if (currentPage * itemsPerPage < tasks.length) {
+                currentPage++;
+                loadTasks();
+            }
+        }
+        
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadTasks();
+            }
+        }
+        
+        document.addEventListener("DOMContentLoaded", loadTasks);
+    </script>
+</body>
+</html>
