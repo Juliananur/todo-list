@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kegiatanku</title>
-    <style>
+     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }
+        html, body {
+            min-height: 100vh; /* Biarkan halaman bisa bertambah panjang */
+            overflow-y: auto; /* Pastikan scrolling aktif */
         }
         body {
             font-family: 'Poppins', sans-serif;
@@ -16,7 +20,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             padding: 20px;
         }
         .container {
@@ -25,9 +28,11 @@
             border-radius: 15px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
             text-align: center;
-            width: 60vw;
+            width: 90vw;
             max-width: 600px;
             min-width: 300px;
+            max-height: 90vh; /* Jangan buat tinggi penuh agar bisa scroll */
+            overflow-y: auto;
             transition: 0.3s;
             display: flex;
             flex-direction: column;
@@ -61,6 +66,7 @@
             justify-content: space-between;
             align-items: center;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
         .sort-icon {
             cursor: pointer;
@@ -103,6 +109,30 @@
         .overdue {
             background: #ff5252 !important;
             color: white;
+        }
+
+        /* Responsif untuk layar kecil */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+                height: auto;
+            }
+            .container {
+                width: 100%;
+                padding: 15px;
+            }
+            input, .deadline, button {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+            .task-controls {
+                flex-direction: column;
+                gap: 5px;
+            }
+            li {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
